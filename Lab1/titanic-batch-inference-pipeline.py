@@ -87,8 +87,8 @@ def g():
 
 
     df_recent = history_df.tail(5)
-    dfi.export(df_recent, './df_recent.png', table_conversion = 'matplotlib')
-    dataset_api.upload("./df_recent.png", "Resources/images", overwrite=True)
+    dfi.export(df_recent, './df_recent_titanic.png', table_conversion = 'matplotlib')
+    dataset_api.upload("./df_recent_titanic.png", "Resources/images", overwrite=True)
     
     predictions = history_df[['prediction']]
     labels = history_df[['label']]
@@ -103,8 +103,8 @@ def g():
     
         cm = sns.heatmap(df_cm, annot=True)
         fig = cm.get_figure()
-        fig.savefig("./confusion_matrix.png")
-        dataset_api.upload("./confusion_matrix.png", "Resources/images", overwrite=True)
+        fig.savefig("./confusion_matrix_titanic.png")
+        dataset_api.upload("./confusion_matrix_titanic.png", "Resources/images", overwrite=True)
     else:
         print("You need both a deceased and a survivor prediction to create the confusion matrix.")
         print("Run the batch inference pipeline more times until you get both predictions") 
