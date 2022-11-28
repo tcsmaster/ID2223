@@ -13,5 +13,4 @@ In titanic-feature-pipeline-daily.py, I wrote a function that creates a syntheti
 
 In titanic-batch-inference-pipeline.py, I predict whether the synthetic passenger would have survived the Titanic or not.
 
-There are two additional Huggingface spaces, one where one can enter different parameters, and the model predict whether the person ould have died or not.
-The second space serves as a dashboard where the most recent daily pediction can be seen, as well as the last 5 predictions plus the confusion matrix of the predictions
+There are two additional Huggingface spaces, one for the Iris prediction [here](https://huggingface.co/spaces/CsanadT/Iris) and the Titanic prediction [over here](https://huggingface.co/spaces/CsanadT/Titanic).
