@@ -15,11 +15,6 @@ def transcribe_url(url):
     text = pipe(audio)["text"]
     return text
 
-def transcribe_file(audio):
-    rate, y = audio
-    text = pipe(y)["text"]
-    return text
-
 url_demo = gr.Interface(
     fn = transcribe_url, 
     inputs = "text", 
@@ -36,13 +31,6 @@ voice_demo = gr.Interface(
     description="Live transcription of swedish speech via a fine-tuned Whisper model",
 )
 
-file_demo = gr.Interface(
-    fn = transcribe_file,
-    inputs=gr.Audio(file_count="single"),
-    outputs="text",
-    title="Swedish Whisper",
-    description="Transciption of a swedish audio file via a fine-tuned Whisper model",
-)
-demo = gr.TabbedInterface([url_demo, voice_demo, file_demo], ["YouTube video transciption", "Live audio to Text", "Transcribe a file"])
+demo = gr.TabbedInterface([url_demo, voice_demo], ["YouTube video transciption", "Live audio to Text"])
 
 demo.launch()
