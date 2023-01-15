@@ -1,0 +1,20 @@
+# backfill data
+*.csv
+
+# vscode stuff
+*.vscode
+
+# __pycachce__ stuff
+*__pycachce__
+
+*.txt
+
+project/__pycache__/functions.cpython-39.pyc
+
+*.pickle
+
+*.pkl
+
+*.pyc
+
+*.env

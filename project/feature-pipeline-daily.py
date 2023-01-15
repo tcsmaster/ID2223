@@ -2,37 +2,47 @@ import os
 import modal
 from functions import *
 
-LOCAL = True
+stub = modal.Stub()
 
-if not LOCAL:
-    stub = modal.Stub()
-    image = modal.Image.debian_slim().pip_install(["hopsworks", "requests"]) 
+image = modal.Image.debian_slim()\
+    .pip_install(["hopsworks==3.0.4", "requests", "pandas", "joblib", "python-dotenv"]) 
 
-    @stub.function(image=image, schedule=modal.Period(days=1), secret=modal.Secret.from_name("HOPSWORKS_API_KEY"))
-    def f():
-        g()
-
+@stub.function(image=image,
+    schedule=modal.Period(days=1),
+    secrets=[
+        modal.Secret.from_name("HOPSWORKS_API_KEY"),
+        modal.Secret.from_name("WEATHER_API_KEY"),
+        modal.Secret.from_name("AIR_QUALITY_API_KEY")
+        ]
+    )
 def g():
-    import requests
     import hopsworks
 
     client = hopsworks.login()
-    seto = client.get_feature_store()
+    fs = client.get_feature_store()
 
 
-    station_name = "A189391"
-    qual_data = get_air_quality_data(station_name)
-    daily_qual_df = get_air_quality_df(qual_data)
+    station_name = "vienna"
 
-    long, lat = 47.437,	19.256
-    daily_weather_df = get_weather_df(get_weather_data(long, lat))
+    daily_qual_data = get_air_quality_data(station_name)
+    daily_qual_df = get_air_quality_df(daily_qual_data)
 
-    
+    daily_weather_data = get_weather_data_daily(station_name)
+    raw_daily_weather_df = get_weather_df(daily_weather_data)
+    daily_weather_df = transform(raw_daily_weather_df)
 
+    air_quality_fg = fs.get_or_create_feature_group(
+        name = 'air_quality_fg',
+        version = 3
+    )
+    weather_fg = fs.get_or_create_feature_group(
+        name = 'weather_fg',
+        version = 5
+    )
+
+    air_quality_fg.insert(daily_qual_df)
+    weather_fg.insert(daily_weather_df)
 
 if __name__ == "__main__":
-    if LOCAL == True :
+    with stub.run():
         g()
-    else:
-        with stub.run():
-            f()

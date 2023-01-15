@@ -1,120 +1,47 @@
-from datetime import datetime
 import requests
 import os
-import joblib
 import pandas as pd
-
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 
 
-def decode_features(df, feature_view):
-    """Decodes features in the input DataFrame using corresponding Hopsworks Feature Store transformation functions"""
-    df_res = df.copy()
-
-    import inspect
-
-
-    td_transformation_functions = feature_view._batch_scoring_server._transformation_functions
-
-    res = {}
-    for feature_name in td_transformation_functions:
-        if feature_name in df_res.columns:
-            td_transformation_function = td_transformation_functions[feature_name]
-            sig, foobar_locals = inspect.signature(td_transformation_function.transformation_fn), locals()
-            param_dict = dict([(param.name, param.default) for param in sig.parameters.values() if param.default != inspect._empty])
-            if td_transformation_function.name == "min_max_scaler":
-                df_res[feature_name] = df_res[feature_name].map(
-                    lambda x: x * (param_dict["max_value"] - param_dict["min_value"]) + param_dict["min_value"])
-
-            elif td_transformation_function.name == "standard_scaler":
-                df_res[feature_name] = df_res[feature_name].map(
-                    lambda x: x * param_dict['std_dev'] + param_dict["mean"])
-            elif td_transformation_function.name == "label_encoder":
-                dictionary = param_dict['value_to_index']
-                dictionary_ = {v: k for k, v in dictionary.items()}
-                df_res[feature_name] = df_res[feature_name].map(
-                    lambda x: dictionary_[x])
-    return df_res
-
-
-def get_model(project, model_name, evaluation_metric, sort_metrics_by):
-    """Retrieve desired model or download it from the Hopsworks Model Registry.
-    In second case, it will be physically downloaded to this directory"""
-    TARGET_FILE = "model.pkl"
-    list_of_files = [os.path.join(dirpath,filename) for dirpath, _, filenames \
-                     in os.walk('.') for filename in filenames if filename == TARGET_FILE]
-
-    if list_of_files:
-        model_path = list_of_files[0]
-        model = joblib.load(model_path)
-    else:
-        if not os.path.exists(TARGET_FILE):
-            mr = project.get_model_registry()
-            # get best model based on custom metrics
-            model = mr.get_best_model(model_name,
-                                      evaluation_metric,
-                                      sort_metrics_by)
-            model_dir = model.download()
-            model = joblib.load(model_dir + "/model.pkl")
-
-    return model
-
-
-def get_air_quality_data(station_name):
+def get_air_quality_data(station_name:str) -> list:
     AIR_QUALITY_API_KEY = os.getenv('AIR_QUALITY_API_KEY')
-    json = requests.get(f'https://api.waqi.info/feed/{station_name}/?token={AIR_QUALITY_API_KEY}').json()['data']
-    iaqi = json['iaqi']
-    forecast = json['forecast']['daily']
+    request_value = f'https://api.waqi.info/feed/{station_name}/?token={AIR_QUALITY_API_KEY}'
+    answer = requests.get(request_value).json()["data"]
+    forecast = answer['forecast']['daily']
     return [
-        station_name,
-        json['aqi'],                 # AQI
-        json['time']['s'][:10],      # Date
-        iaqi['h']['v'],
-        iaqi['p']['v'],
-        iaqi['pm10']['v'],
-        iaqi['t']['v'],
-        forecast['pm10'][0]['avg'],
-        forecast['pm10'][0]['max'],
-        forecast['pm10'][0]['min'],
-        forecast['pm25'][0]['avg'],
-        forecast['pm25'][0]['max'],
-        forecast['pm25'][0]['min']
+        answer["time"]["s"][:10],      # Date
+        int(forecast['pm25'][0]['avg']),  # avg predicted pm25
+        int(forecast['pm10'][0]['avg']),  # avg predicted pm10
+        max(int(forecast['pm25'][0]['avg']), int(forecast['pm10'][0]['avg'])) # avg predicted aqi
     ]
 
-def get_air_quality_df(data):
+def get_air_quality_df(data:list)-> pd.DataFrame:
     col_names = [
-        'city',
-        'aqi',
         'date',
-        'iaqi_h',
-        'iaqi_p',
-        'iaqi_pm10',
-        'iaqi_t',
-        'pm10_avg',
-        'pm10_max',
-        'pm10_min',
-        'pm25_avg',
-        'pm25_max',
-        'pm25_min'
+        'pm25',
+        'pm10',
+        'aqi'
     ]
 
     new_data = pd.DataFrame(
-        data,
-        columns=col_names
-    )
-    new_data.date = new_data.date.apply(timestamp_2_time)
+        data
+    ).T
+    new_data.columns = col_names
+    new_data['pm25'] = pd.to_numeric(new_data['pm25'])
+    new_data['pm10'] = pd.to_numeric(new_data['pm10'])
+    new_data['aqi'] = pd.to_numeric(new_data['aqi'])
 
     return new_data
 
 
-def get_weather_data(long, lat):
+def get_weather_data_daily(city: str) -> list:
     WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
-    json = requests.get(f'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{long},{lat}/today?unitGroup=metric&include=days&key={WEATHER_API_KEY}&contentType=json').json()
-    data = json['days'][0]
-
+    answer = requests.get(f'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}/today?unitGroup=metric&include=days&key={WEATHER_API_KEY}&contentType=json').json()
+    data = answer['days'][0]
     return [
-        json['address'].capitalize(),
+        answer['address'].lower(),
         data['datetime'],
         data['tempmax'],
         data['tempmin'],
@@ -141,10 +68,9 @@ def get_weather_data(long, lat):
         data['conditions']
     ]
 
-
-def get_weather_df(data):
+def get_weather_df(data:list)->pd.DataFrame:
     col_names = [
-        'city',
+        'name',
         'date',
         'tempmax',
         'tempmin',
@@ -172,14 +98,22 @@ def get_weather_df(data):
     ]
 
     new_data = pd.DataFrame(
-        data,
-        columns=col_names
-    )
-    new_data.date = new_data.date.apply(timestamp_2_time)
+        data
+    ).T
+    new_data.columns = col_names
+    for col in col_names:
+        if col not in ['name', 'date', 'conditions']:
+            new_data[col] = pd.to_numeric(new_data[col])
+            if col in ['uvindex', 'precipprob']:
+                new_data[col] = new_data[col].astype(int)
 
     return new_data
 
-def timestamp_2_time(x):
-    dt_obj = datetime.strptime(str(x), '%Y-%m-%d')
-    dt_obj = dt_obj.timestamp() * 1000
-    return int(dt_obj)
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    df.loc[df["windgust"].isna(),'windgust'] = df['windspeed']
+    df['snow'].fillna(0,inplace=True)
+    df['snowdepth'].fillna(0, inplace=True)
+    if "sealevelpressure" or "datetime" in df.columns:
+        df.rename(columns={"sealevelpressure":"pressure", "datetime":"date"}, inplace=True)
+    df['pressure'].fillna(df['pressure'].mean(), inplace=True)
+    return df
