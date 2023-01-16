@@ -2,19 +2,25 @@ import os
 import modal
 from functions import *
 
-stub = modal.Stub()
+LOCAL = True
 
-image = modal.Image.debian_slim()\
+if LOCAL == False:
+    stub = modal.Stub()
+    image = modal.Image.debian_slim()\
     .pip_install(["hopsworks==3.0.4", "requests", "pandas", "joblib", "python-dotenv"]) 
 
-@stub.function(image=image,
-    schedule=modal.Period(days=1),
-    secrets=[
-        modal.Secret.from_name("HOPSWORKS_API_KEY"),
-        modal.Secret.from_name("WEATHER_API_KEY"),
-        modal.Secret.from_name("AIR_QUALITY_API_KEY")
+    @stub.function(image=image,
+        schedule=modal.Period(days=1),
+        secrets=[
+            modal.Secret.from_name("HOPSWORKS_API_KEY"),
+            modal.Secret.from_name("WEATHER_API_KEY"),
+            modal.Secret.from_name("AIR_QUALITY_API_KEY")
         ]
     )
+    def f():
+        g()
+
+
 def g():
     import hopsworks
 
@@ -44,5 +50,8 @@ def g():
     weather_fg.insert(daily_weather_df)
 
 if __name__ == "__main__":
-    with stub.run():
+    if LOCAL == True :
         g()
+    else:
+        with stub.run():
+            f()

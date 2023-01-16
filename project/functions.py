@@ -105,7 +105,7 @@ def get_weather_df(data:list)->pd.DataFrame:
         if col not in ['name', 'date', 'conditions']:
             new_data[col] = pd.to_numeric(new_data[col])
             if col in ['uvindex', 'precipprob']:
-                new_data[col] = new_data[col].astype(int)
+                new_data[col] = new_data[col].astype('int64')
 
     return new_data
 
@@ -117,3 +117,9 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
         df.rename(columns={"sealevelpressure":"pressure", "datetime":"date"}, inplace=True)
     df['pressure'].fillna(df['pressure'].mean(), inplace=True)
     return df
+
+def data_encoder(X):
+    from sklearn.preprocessing import OrdinalEncoder
+    X.drop(columns=['date', 'name'], inplace=True)
+    X['conditions'] = OrdinalEncoder().fit_transform(X[['conditions']])
+    return X
