@@ -8,12 +8,12 @@ jobs:
       runs-on: ubuntu-latest
       steps:
           - name: checkout repo content
-            using: actions/checkout@v3
+            uses: actions/checkout@v3
             
           - name: setup python
             uses: actions/setup-python@v4
             with:
-              python-version: '3.9'
+              python-version: '3.8'
               
           - name: install python packages
             run: |
@@ -22,5 +22,7 @@ jobs:
               
           - name: execute py script
             env:
-              SOME_SECRET: ${{ secrets.HOPSWORKS_API_KEY }}
+              HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+              WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+              AIR_QUALITY_API_KEY: ${{ secrets.AIR_QUALITY_API_KEY }}
             run: python ./project/feature-pipeline-daily.py
