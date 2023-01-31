@@ -3,3 +3,6 @@ requests
 pandas
 joblib
 python-dotenv
+optuna
+scikit-learn
+xgboost
