@@ -2,7 +2,7 @@ name: weekly-retraining-pipeline
 run-name: ${{ github.actor }} is retraining the aqi prediction model with updated data
 on:
     schedule:
-        - cron: "0 0 12 */7 * ?"
+        - cron: "0 12 * * 0"
 jobs:
   build:
       runs-on: ubuntu-latest
