@@ -1,8 +1,8 @@
-name: feature-pipeline-daily
-run-name: ${{ github.actor }} is gathering daily weather and air quality data
+name: weekly-retraining-pipeline
+run-name: ${{ github.actor }} is retraining the aqi prediction model with updated data
 on:
     schedule:
-        - cron: "0 8 * * *"
+        - cron: "0 13 * * 0"
 jobs:
   build:
       runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
           - name: setup python
             uses: actions/setup-python@v4
             with:
-              python-version: '3.9'
+              python-version: '3.8'
               
           - name: install python packages
             run: |
@@ -23,6 +23,4 @@ jobs:
           - name: execute py script
             env:
               HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
-              WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
-              AIR_QUALITY_API_KEY: ${{ secrets.AIR_QUALITY_API_KEY }}
-            run: python ./project/feature-pipeline-daily.py
+            run: python ./project/training-pipeline.py

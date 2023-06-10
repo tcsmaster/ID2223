@@ -120,6 +120,6 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
 
 def data_encoder(X):
     from sklearn.preprocessing import OrdinalEncoder
-    X.drop(columns=['date', 'name'], inplace=True)
+    X.drop(columns=['name'], inplace=True)
     X['conditions'] = OrdinalEncoder().fit_transform(X[['conditions']])
     return X
