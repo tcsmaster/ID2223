@@ -15,4 +15,4 @@ There are 3 ways to interact ith the model:
 - Transcribe live audio
 - Transcribe a local file
 
-You can play with th model [here](https://huggingface.co/spaces/CsanadT/Swedish_ASmR)
+You can play with the model [here](https://huggingface.co/spaces/CsanadT/Swedish_ASmR)
