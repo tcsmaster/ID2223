@@ -1,6 +1,8 @@
 import requests
+from sklearn.preprocessing import OneHotEncoder
 import os
 import pandas as pd
+import numpy as np
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
@@ -115,11 +117,10 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
     df['snowdepth'].fillna(0, inplace=True)
     if "sealevelpressure" or "datetime" in df.columns:
         df.rename(columns={"sealevelpressure":"pressure", "datetime":"date"}, inplace=True)
-    df['pressure'].fillna(df['pressure'].mean(), inplace=True)
+    df.fillna({'pressure':np.NaN})
     return df
 
 def data_encoder(X):
-    from sklearn.preprocessing import OrdinalEncoder
     X.drop(columns=['name'], inplace=True)
-    X['conditions'] = OrdinalEncoder().fit_transform(X[['conditions']])
+    X['conditions'] = OneHotEncoder().fit_transform(X[['conditions']])
     return X
