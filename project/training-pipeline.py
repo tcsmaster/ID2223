@@ -4,7 +4,6 @@ import joblib
 import xgboost as xgb
 import optuna
 import pickle
-from optuna.integration import XGBoostPruningCallback
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from hsml.schema import Schema
@@ -67,7 +66,7 @@ class Objective:
         "n_estimators": 1000,
         "eval_metric": "rmse",
         "eta": 0.05,
-        "callbacks": [XGBoostPruningCallback(trial, "validation_0-rmse")],
+        "early_stopping_rounds":50,
         "booster": "gbtree",
         "lambda": trial.suggest_float("lambda", 1e-8, 10, log=True),
         "alpha": trial.suggest_float("alpha", 0.01, 10, log=True),
