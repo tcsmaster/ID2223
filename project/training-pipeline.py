@@ -66,7 +66,6 @@ class Objective:
         "objective": 'reg:squarederror',
         "n_estimators": 1000,
         "eval_metric": "rmse",
-        "early_stopping_rounds": 50,
         "eta": 0.05,
         "callbacks": [XGBoostPruningCallback(trial, "validation_0-rmse")],
         "booster": "gbtree",
