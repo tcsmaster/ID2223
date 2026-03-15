@@ -1,0 +1,7 @@
+datasets/*
+
+.env
+
+.python_version
+
+.venv/*
