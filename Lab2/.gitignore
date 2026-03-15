@@ -2,6 +2,6 @@ datasets/*
 
 .env
 
-.python_version
+.python-version
 
 .venv/*
