@@ -1,3 +1,5 @@
+*.ipnyb
+
 datasets/*
 
 .env

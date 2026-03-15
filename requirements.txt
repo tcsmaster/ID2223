@@ -1,5 +1,0 @@
-hopsworks==3.0.4
-requests
-pandas
-joblib
-python-dotenv
